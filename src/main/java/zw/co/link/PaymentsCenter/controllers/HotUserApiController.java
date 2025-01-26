@@ -17,6 +17,7 @@ public class HotUserApiController {
 
     public HotUserApiController(HotUserApiService hotUserApiService) {
         this.hotUserApiService = hotUserApiService;
+
     }
 
     // Authentication Endpoints

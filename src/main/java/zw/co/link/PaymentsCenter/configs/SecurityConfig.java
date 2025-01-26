@@ -36,7 +36,8 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/oauth2/**"
                 ).permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
+//                .anyRequest().authenticated()
         );
         http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), BasicAuthenticationFilter.class);
         http.oauth2Login(oauth2 -> oauth2

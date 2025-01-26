@@ -44,8 +44,20 @@ public class AppSeeder {
                         .roles(Set.of(Role.builder().id(1L).build()))
                         .build();
 
-                userService.saveUser(adminUser); // Use the service to handle password encoding if needed
-                log.info("DONE GENERATING ADMIN USER");
+                userService.saveUser(adminUser);
+
+                User vendorUser = User.builder()
+                        .firstName("Vendor")
+                        .lastName("Vendor")
+                        .password("Pass123*")
+                        .email("vend@pay.link.co.zw")
+                        .gender("male")
+                        .roles(Set.of(Role.builder().id(2L).build()))
+                        .build();
+
+
+                userService.saveUser(vendorUser);// Use the service to handle password encoding if needed
+                log.info("DONE GENERATING ADMIN, VENDOR USER");
             }
 
 

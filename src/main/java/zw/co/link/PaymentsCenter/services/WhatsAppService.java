@@ -140,7 +140,7 @@ public class WhatsAppService {
                 "agentRef123", Integer.parseInt(parts[1]), parts[2], Double.parseDouble(parts[3]), "", List.of()
         );
 
-        RechargeResponse response = hotUserApiService.rechargeProduct(
+        RechargeResponse response = hotUserApiService.initiateRecharge(
                 rechargeRequest// amount
         );
 
