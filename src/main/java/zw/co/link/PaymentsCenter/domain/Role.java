@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Table
 @Entity
-public class Role {
+public class Role extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)

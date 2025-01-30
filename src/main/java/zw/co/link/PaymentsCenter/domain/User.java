@@ -18,7 +18,7 @@ import java.util.UUID;
 @Table(name = "s_user")
 @Entity
 // User Entity
-public class User {
+public class User extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
