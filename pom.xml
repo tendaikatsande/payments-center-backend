@@ -8,11 +8,11 @@
         <version>3.4.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>zw.co.link</groupId>
-    <artifactId>PaymentsCenter</artifactId>
+    <groupId>zw.co.finpay</groupId>
+    <artifactId>FinPay</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>PaymentsCenter</name>
-    <description>Payments Center CMS</description>
+    <name>FinPay</name>
+    <description>FinPay</description>
     <url/>
     <licenses>
         <license/>
