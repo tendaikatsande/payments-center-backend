@@ -18,7 +18,6 @@ import java.util.Properties;
 
 @EnableWebMvc
 @SpringBootApplication
-@OpenAPIDefinition(info = @Info(title = "FinPay", version = "1.0", description = "FinPay"), security = @SecurityRequirement(name = "Bearer Token"))
 @EnableScheduling
 @EnableAsync
 public class FinPayApplication {

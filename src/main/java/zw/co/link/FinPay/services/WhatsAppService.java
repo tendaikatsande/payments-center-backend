@@ -16,11 +16,6 @@ public class WhatsAppService {
     private final HotUserApiService hotUserApiService;
     private final WhatsAppMessageSender whatsAppMessageSender;
 
-    @Value("${whatsapp.business.phone.number.id}")
-    private String phoneNumberId;
-
-    @Value("${whatsapp.access.token}")
-    private String accessToken;
 
     public WhatsAppService(
             HotUserApiService hotUserApiService,
@@ -30,33 +25,31 @@ public class WhatsAppService {
         this.whatsAppMessageSender = whatsAppMessageSender;
     }
 
-    public void processIncomingMessage(WhatsAppWebhookPayload payload) {
-        WhatsAppMessage message = extractMessage(payload);
-        if (message == null) return;
+    public void processIncomingMessage(WhatsAppBusinessAccountEvent payload) {
 
         try {
-            switch (determineMessageIntent(message.getBody())) {
+            switch (determineMessageIntent(payload.getFirstMessageBody())) {
                 case LOGIN:
-                    handleLogin(message);
+                    handleLogin(payload.getFrom(),payload.getFirstMessageBody(), payload.getFirstMessageBodyId());
                     break;
                 case BALANCE:
-                    handleBalanceInquiry(message);
+                    handleBalanceInquiry(payload.getFrom(),payload.getFirstMessageBody(), payload.getFirstMessageBodyId());
                     break;
                 case FUND_ACCOUNT:
-                    handleAccountFunding(message);
+                    handleAccountFunding(payload.getFrom(),payload.getFirstMessageBody(), payload.getFirstMessageBodyId());
                     break;
                 case PRODUCT_RECHARGE:
-                    handleProductRecharge(message);
+                    handleProductRecharge(payload.getFrom(),payload.getFirstMessageBody(), payload.getFirstMessageBodyId());
                     break;
                 case TRANSACTION_QUERY:
-                    handleTransactionQuery(message);
+                    handleTransactionQuery(payload.getFrom(),payload.getFirstMessageBody(), payload.getFirstMessageBodyId());
                     break;
                 default:
-                    sendHelpMessage(message.getFrom());
+                    sendHelpMessage(payload.getFrom(), payload.getFirstMessageBodyId());
             }
         } catch (Exception e) {
             logger.error("Error processing message", e);
-            sendErrorMessage(message.getFrom(), e.getMessage());
+            sendWhatsappMessage(payload.getFrom(),"Error processing message", payload.getFirstMessageBodyId());
         }
     }
 
@@ -72,22 +65,19 @@ public class WhatsAppService {
         return MessageIntent.UNKNOWN;
     }
 
-    private void handleLogin(WhatsAppMessage message) {
-        String[] parts = message.getBody().split(" ");
+    private void handleLogin(String phoneNumber, String message, String messageId) {
+        String[] parts = message.split(" ");
         if (parts.length < 3) {
-            sendErrorMessage(message.getFrom(), "Invalid login format. Use: login [accessCode] [password]");
+            sendWhatsappMessage(phoneNumber, "Invalid login format. Use: login [accessCode] [password]",messageId);
             return;
         }
 
         AuthResponse response = hotUserApiService.login(parts[1], parts[2]);
-        whatsAppMessageSender.sendMessage(
-                message.getFrom(),
-                "Login successful. Token issued."
-        );
+      sendWhatsappMessage(phoneNumber, response.getToken()!=null ? "Login successful" : "Login failed", messageId);
     }
 
-    private void handleBalanceInquiry(WhatsAppMessage message) {
-        String[] parts = message.getBody().split(" ");
+    private void handleBalanceInquiry(String phoneNumber, String message, String messageId) {
+        String[] parts = message.split(" ");
         AccountType accountType = parts.length > 1
                 ? AccountType.valueOf(parts[1].toUpperCase())
                 : AccountType.MAIN;
@@ -103,13 +93,14 @@ public class WhatsAppService {
                 ))
         );
 
-        whatsAppMessageSender.sendMessage(message.getFrom(), responseMessage.toString());
+        sendWhatsappMessage(phoneNumber,responseMessage.toString(),messageId);
+
     }
 
-    private void handleAccountFunding(WhatsAppMessage message) {
-        String[] parts = message.getBody().split(" ");
+    private void handleAccountFunding(String phoneNumber, String message, String messageId) {
+        String[] parts = message.split(" ");
         if (parts.length < 5) {
-            sendErrorMessage(message.getFrom(), "Invalid fund format. Use: fund [agentRef] [target] [amount] [sourceType]");
+            sendWhatsappMessage(phoneNumber, "Invalid fund format. Use: fund [agentRef] [target] [amount] [sourceType]",messageId);
             return;
         }
 
@@ -120,18 +111,18 @@ public class WhatsAppService {
                 "agentRef123", 1, targetAccount, amount, 1, ""
         );
 
-        whatsAppMessageSender.sendMessage(
-                message.getFrom(),
+        sendWhatsappMessage(
+                phoneNumber,
                 response.isSuccessful()
                         ? "Account funded successfully"
-                        : "Account funding failed: " + response.getMessage()
+                        : "Account funding failed: " + response.getMessage(),messageId
         );
     }
 
-    private void handleProductRecharge(WhatsAppMessage message) {
-        String[] parts = message.getBody().split(" ");
+    private void handleProductRecharge(String phoneNumber, String message, String messageId) {
+        String[] parts = message.split(" ");
         if (parts.length < 4) {
-            sendErrorMessage(message.getFrom(), "Invalid recharge format. Use: recharge [productId] [target] [amount]");
+            sendWhatsappMessage(phoneNumber, "Invalid recharge format. Use: recharge [productId] [target] [amount]",messageId);
             return;
         }
 
@@ -143,31 +134,30 @@ public class WhatsAppService {
                 rechargeRequest// amount
         );
 
-        whatsAppMessageSender.sendMessage(
-                message.getFrom(),
+        sendWhatsappMessage(
+                phoneNumber,
                 response.isSuccessful()
                         ? "Recharge successful."
-                        : "Recharge failed: " + response.getMessage()
+                        : "Recharge failed: " + response.getMessage(),messageId
         );
+
     }
 
-    private void handleTransactionQuery(WhatsAppMessage message) {
-        String[] parts = message.getBody().split(" ");
+    private void handleTransactionQuery(String phoneNumber, String message, String messageId) {
+        String[] parts = message.split(" ");
         if (parts.length < 2) {
-            sendErrorMessage(message.getFrom(), "Invalid transaction query format. Use: transaction [agentReference]");
+
+            sendWhatsappMessage(phoneNumber, "Invalid transaction query format. Use: transaction [agentReference]", messageId);
             return;
         }
 
         QueryTransactionResponse response = hotUserApiService.queryTransaction(parts[1]);
 
-        whatsAppMessageSender.sendMessage(
-                message.getFrom(),
-                "Transaction ref :" + response.getTransactionReference()
 
-        );
+        sendWhatsappMessage(phoneNumber, "Transaction ref :" + response.getTransactionReference(), messageId);
     }
 
-    private void sendHelpMessage(String phoneNumber) {
+    private void sendHelpMessage(String phoneNumber, String messageId) {
         String helpText = """
                     Available Commands:
                     - login [accessCode] [password]
@@ -176,31 +166,23 @@ public class WhatsAppService {
                     - recharge [productId] [target] [amount]
                     - transaction [agentReference]
                 """;
-        whatsAppMessageSender.sendMessage(phoneNumber, helpText);
+
+        sendWhatsappMessage(phoneNumber, helpText, messageId);
     }
 
-    private void sendErrorMessage(String phoneNumber, String errorMessage) {
-        whatsAppMessageSender.sendMessage(
-                phoneNumber,
-                "Error: " + errorMessage +
-                        "\nType 'help' for available commands."
-        );
+    private void sendWhatsappMessage(String phoneNumber, String _message, String messageId) {
+        WhatsAppMessage message = WhatsAppMessage.builder()
+                .to(phoneNumber)
+                .messagingProduct("whatsapp")
+                .recipientType("individual")
+                .type("text")
+                .text(new WhatsAppMessage.Text(false, _message))
+                .context(
+                        new WhatsAppMessage.Context(messageId)
+                )
+                .build();
+        whatsAppMessageSender.sendMessage(message);
     }
 
-    private WhatsAppMessage extractMessage(WhatsAppWebhookPayload payload) {
-        if (payload.getEntry() == null || payload.getEntry().isEmpty()) {
-            return null;
-        }
 
-        WhatsAppWebhookPayload.Change change = payload.getEntry().get(0).getChanges().get(0);
-        if (change.getValue().getMessages() == null || change.getValue().getMessages().isEmpty()) {
-            return null;
-        }
-
-        WhatsAppWebhookPayload.Message msg = change.getValue().getMessages().get(0);
-        return new WhatsAppMessage(
-                msg.getFrom(),
-                msg.getText() != null ? msg.getText().getBody() : ""
-        );
-    }
 }
