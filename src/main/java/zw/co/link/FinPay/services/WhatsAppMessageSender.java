@@ -1,7 +1,6 @@
 package zw.co.link.FinPay.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -9,7 +8,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import zw.co.link.FinPay.domain.dtos.WhatsAppBusinessAccountEvent;
 import zw.co.link.FinPay.domain.dtos.WhatsAppMessage;
 
 // WhatsApp Message Sender
