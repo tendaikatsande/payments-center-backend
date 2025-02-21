@@ -25,14 +25,12 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        // TODO : implement login logic from a service and bind it here
         LoginResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
-        // TODO : implement login logic from a service and bind it here
         UserDto response = authService.getUserProfile();
         return ResponseEntity.ok(response);
     }
