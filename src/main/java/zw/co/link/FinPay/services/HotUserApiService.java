@@ -1,21 +1,28 @@
 package zw.co.link.FinPay.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import zw.co.link.FinPay.domain.HotProduct;
+import zw.co.link.FinPay.domain.MetaData;
 import zw.co.link.FinPay.domain.dtos.*;
+import zw.co.link.FinPay.domain.repositories.HotProductRepository;
 import zw.co.link.FinPay.exceptions.HotUserApiException;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class HotUserApiService {
+    private final HotProductRepository hotProductRepository;
     private final RestTemplate restTemplate;
 
     private final RestTemplate noAuthRestTemplate;
@@ -33,14 +40,21 @@ public class HotUserApiService {
     private String currentRefreshToken;
     private LocalDateTime tokenExpiryTime;
 
-    public HotUserApiService(RestTemplate restTemplate) {
+    private final ObjectMapper objectMapper;
+
+    public HotUserApiService(RestTemplate restTemplate,
+                             HotProductRepository hotProductRepository, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
         this.noAuthRestTemplate = new RestTemplate();
         this.restTemplate.setInterceptors(Collections.singletonList((request, body, execution) -> {
             request.getHeaders().setBearerAuth(getCurrentValidToken());
             return execution.execute(request, body);
         }));
+        this.hotProductRepository = hotProductRepository;
+
     }
+
 
     public synchronized String getCurrentValidToken() {
         if (isTokenExpiredOrInvalid()) {
@@ -187,12 +201,35 @@ public class HotUserApiService {
 
     public ProductsResponse getProducts() {
         try {
+
+            if (hotProductRepository.count() > 0) {
+                ProductsResponse response = new ProductsResponse();
+                List<Products> products = hotProductRepository.findAll().stream().map(product -> Products.builder()
+                        .productId(product.getProductId())
+                        .name(product.getName())
+                        .accountTypeId(product.getAccountTypeId())
+                        .requiredOptions(product.getRequiredOptions())
+                        .metaData(product.getMetaData())
+                        .build()).toList();
+                response.setProducts(products);
+                return response;
+            }
             ResponseEntity<ProductsResponse> response = restTemplate.exchange(
                     BASE_URL + "/products/0",
                     HttpMethod.GET,
                     null,
                     ProductsResponse.class
             );
+
+            List<HotProduct> hotProducts = Objects.requireNonNull(response.getBody()).getProducts()
+                    .stream().map(product -> HotProduct.builder()
+                            .productId(product.getProductId())
+                            .name(product.getName())
+                            .accountTypeId(product.getAccountTypeId())
+                            .requiredOptions(product.getRequiredOptions())
+                            .metaData(objectMapper.convertValue(product.getMetaData(), MetaData.class))
+                            .build()).toList();
+            hotProductRepository.saveAllAndFlush(hotProducts);
 
             return response.getBody();
         } catch (RestClientException e) {
@@ -202,6 +239,19 @@ public class HotUserApiService {
 
     public ProductsResponse getProductDetails(int productId) {
         try {
+            Optional<HotProduct> hotProduct = hotProductRepository.findByProductId(productId);
+            if (hotProduct.isPresent()) {
+                Products product = Products.builder()
+                        .productId(hotProduct.get().getProductId())
+                        .name(hotProduct.get().getName())
+                        .accountTypeId(hotProduct.get().getAccountTypeId())
+                        .requiredOptions(hotProduct.get().getRequiredOptions())
+                        .metaData(hotProduct.get().getMetaData())
+                        .build();
+
+                return new ProductsResponse(List.of(product));
+            }
+
             ResponseEntity<ProductsResponse> response = restTemplate.exchange(
                     BASE_URL + "/products/{productId}",
                     HttpMethod.GET,

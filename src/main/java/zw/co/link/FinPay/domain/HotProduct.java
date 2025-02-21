@@ -20,9 +20,9 @@ public class HotProduct {
     private int productId;
     private String name;
     private int accountTypeId;
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     private List<RechargeOptionDescription> requiredOptions;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private MetaData metaData;
 }
 

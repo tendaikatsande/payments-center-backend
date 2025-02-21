@@ -4,6 +4,7 @@ package zw.co.link.FinPay.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import zw.co.link.FinPay.domain.dtos.AuthProvider;
+import zw.co.link.FinPay.domain.dtos.UserDto;
 
 import java.time.Instant;
 import java.util.Set;
@@ -45,6 +46,19 @@ public class User extends Auditable {
     private UUID emailLoginToken;
     private Instant emailLoginTokenExpiresAt;
 
+
+    public UserDto toDto() {
+        return UserDto.builder()
+                .id(id)
+                .firstName(firstName)
+                .middleName(middleName)
+                .lastName(lastName)
+                .gender(gender)
+                .email(email)
+                .phoneNumber(phoneNumber)
+                .imageUrl(imageUrl)
+                .build();
+    }
 }
 
 

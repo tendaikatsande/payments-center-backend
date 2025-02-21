@@ -1,12 +1,14 @@
 package zw.co.link.FinPay.domain.dtos;
 
 
+import lombok.Builder;
 import zw.co.link.FinPay.domain.Role;
 
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
+@Builder
 public record UserDto(
         Long id,
         String firstName,

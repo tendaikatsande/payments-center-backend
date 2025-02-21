@@ -20,18 +20,6 @@ public class HotUserApiController {
 
     }
 
-    // Authentication Endpoints
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
-            @RequestBody UserLoginRequest loginRequest
-    ) {
-        AuthResponse authResponse = hotUserApiService.login(
-                loginRequest.getAccessCode(),
-                loginRequest.getPassword()
-        );
-        return ResponseEntity.ok(authResponse);
-    }
-
     @PostMapping("/refresh-token")
     public ResponseEntity<AuthResponse> refreshToken(
             @RequestBody RefreshTokenRequest refreshTokenRequest
@@ -66,6 +54,7 @@ public class HotUserApiController {
         );
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/products")
     public ResponseEntity<?> getProduct(
