@@ -8,7 +8,7 @@ import zw.co.link.FinPay.domain.dtos.*;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserService {
+public interface AuthService {
     LoginResponse login(LoginRequest loginRequest);
     InfoResponse register(RegistrationRequest registrationRequest);
     UserDto getUserById(Long id);

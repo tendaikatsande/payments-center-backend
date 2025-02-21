@@ -5,35 +5,35 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import zw.co.link.FinPay.domain.dtos.*;
-import zw.co.link.FinPay.services.UserService;
+import zw.co.link.FinPay.services.AuthService;
 
 
 import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/users")
+@RequestMapping("api/v1/auth")
 @CrossOrigin
-public class UserController {
+public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         // TODO : implement login logic from a service and bind it here
-        LoginResponse response = userService.login(loginRequest);
+        LoginResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
         // TODO : implement login logic from a service and bind it here
-        UserDto response = userService.getUserProfile();
+        UserDto response = authService.getUserProfile();
         return ResponseEntity.ok(response);
     }
 
@@ -46,7 +46,7 @@ public class UserController {
     @PostMapping("/login-with-email")
     public ResponseEntity<?> getEmailLoginLink(@RequestBody EmailLinkLoginRequest emailLinkLoginRequest) {
         // TODO : implement login logic from a service and bind it here
-        InfoResponse response = userService.requestLoginWithEmailLink(emailLinkLoginRequest);
+        InfoResponse response = authService.requestLoginWithEmailLink(emailLinkLoginRequest);
         return ResponseEntity.ok(response);
     }
 
@@ -54,7 +54,7 @@ public class UserController {
     @GetMapping("/login-with-email/{email}/{token}")
     public ResponseEntity<?> loginWithEmailLink(@PathVariable String email, @PathVariable UUID token) {
         // TODO : implement login logic from a service and bind it here
-        LoginResponse response = userService.loginWithEmailLink(email, token);
+        LoginResponse response = authService.loginWithEmailLink(email, token);
         return ResponseEntity.ok(response);
     }
 
@@ -62,14 +62,14 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegistrationRequest registrationRequest) {
         //TODO : implement registration here from a servcie and bind it here
-        InfoResponse infoResponse = userService.register(registrationRequest);
+        InfoResponse infoResponse = authService.register(registrationRequest);
         return ResponseEntity.status(201).body(infoResponse);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable("id") Long id) {
         // TODO : Get user by id
-        return ResponseEntity.ok().body(userService.getUserById(id));
+        return ResponseEntity.ok().body(authService.getUserById(id));
     }
 
 

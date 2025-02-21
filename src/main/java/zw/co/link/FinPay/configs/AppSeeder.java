@@ -8,7 +8,7 @@ import zw.co.link.FinPay.domain.Role;
 import zw.co.link.FinPay.domain.User;
 import zw.co.link.FinPay.domain.repositories.RoleRepository;
 import zw.co.link.FinPay.domain.repositories.UserRepository;
-import zw.co.link.FinPay.services.UserService;
+import zw.co.link.FinPay.services.AuthService;
 
 
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.Set;
 public class AppSeeder {
 
     @Bean
-    CommandLineRunner run(UserRepository userRepository, RoleRepository roleRepository, UserService userService) {
+    CommandLineRunner run(UserRepository userRepository, RoleRepository roleRepository, AuthService authService) {
         return args -> {
             long userCount = userRepository.count();
             long roleCount = roleRepository.count();
@@ -44,7 +44,7 @@ public class AppSeeder {
                         .roles(Set.of(Role.builder().id(1L).build()))
                         .build();
 
-                userService.saveUser(adminUser);
+                authService.saveUser(adminUser);
 
                 User vendorUser = User.builder()
                         .firstName("Vendor")
@@ -56,7 +56,7 @@ public class AppSeeder {
                         .build();
 
 
-                userService.saveUser(vendorUser);// Use the service to handle password encoding if needed
+                authService.saveUser(vendorUser);// Use the service to handle password encoding if needed
                 log.info("DONE GENERATING ADMIN, VENDOR USER");
             }
 

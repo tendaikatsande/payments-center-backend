@@ -7,7 +7,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import zw.co.link.FinPay.domain.User;
-import zw.co.link.FinPay.services.UserService;
+import zw.co.link.FinPay.services.AuthService;
 
 
 import java.util.Optional;
@@ -16,10 +16,10 @@ import java.util.Optional;
 @Slf4j
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserService userService;
+    private final AuthService authService;
 
-    public CustomOAuth2UserService(UserService userService) {
-        this.userService = userService;
+    public CustomOAuth2UserService(AuthService authService) {
+        this.authService = authService;
     }
 
     @Override
@@ -37,10 +37,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = oAuth2User.getAttribute("email");
         // Here you would typically:
         // 1. Check if user exists in your database
-        Optional<User> user = userService.getUserByEmail(email);
+        Optional<User> user = authService.getUserByEmail(email);
         // 2. Create new user if they don't exist
         if (user.isEmpty()) {
-            userService.createOauth2User(oAuth2User);
+            authService.createOauth2User(oAuth2User);
         }
         // 3. Update existing user information if needed
 

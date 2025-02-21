@@ -20,7 +20,7 @@ import zw.co.link.FinPay.domain.dtos.*;
 import zw.co.link.FinPay.domain.repositories.UserRepository;
 import zw.co.link.FinPay.exceptions.UserNotFoundException;
 import zw.co.link.FinPay.services.EmailService;
-import zw.co.link.FinPay.services.UserService;
+import zw.co.link.FinPay.services.AuthService;
 
 
 import java.time.Instant;
@@ -28,14 +28,14 @@ import java.util.*;
 
 @Service
 @Slf4j
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class AuthServiceImpl implements AuthService, UserDetailsService {
     private final UserRepository userRepository;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, EmailService emailService, PasswordEncoder passwordEncoder) {
+    public AuthServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, EmailService emailService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.emailService = emailService;

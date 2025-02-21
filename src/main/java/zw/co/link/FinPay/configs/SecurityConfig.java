@@ -30,14 +30,12 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
-                        "/api/v1/users/login-with-email",
-                        "/api/v1/users/login",
-                        "/api/v1/users/register",
+                        "/api/v1/auth/**",
                         "/swagger-ui/**",
+                        "/v3/api-docs",
                         "/oauth2/**"
                 ).permitAll()
-                .anyRequest().permitAll()
-//                .anyRequest().authenticated()
+                .anyRequest().authenticated()
         );
         http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), BasicAuthenticationFilter.class);
         http.oauth2Login(oauth2 -> oauth2
