@@ -1,5 +1,6 @@
 package zw.co.link.FinPay.controllers;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,9 +56,14 @@ public class HotUserApiController {
         return ResponseEntity.ok(response);
     }
 
-
     @GetMapping("/products")
-    public ResponseEntity<?> getProduct(
+    public ResponseEntity<?> getProducts(Pageable pageable) {
+        return ResponseEntity.ok(hotUserApiService.getProducts(pageable));
+    }
+
+
+    @GetMapping("/products-list")
+    public ResponseEntity<?> getProductList(
     ) {
         try {
             return ResponseEntity.ok(hotUserApiService.getProducts());
