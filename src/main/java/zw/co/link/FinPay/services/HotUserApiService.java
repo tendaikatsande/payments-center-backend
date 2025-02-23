@@ -1,6 +1,9 @@
 package zw.co.link.FinPay.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -42,12 +45,10 @@ public class HotUserApiService {
     private String currentRefreshToken;
     private LocalDateTime tokenExpiryTime;
 
-    private final ObjectMapper objectMapper;
 
     public HotUserApiService(RestTemplate restTemplate,
-                             HotProductRepository hotProductRepository, ObjectMapper objectMapper) {
+                             HotProductRepository hotProductRepository) {
         this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
         this.noAuthRestTemplate = new RestTemplate();
         this.restTemplate.setInterceptors(Collections.singletonList((request, body, execution) -> {
             request.getHeaders().setBearerAuth(getCurrentValidToken());
@@ -202,24 +203,31 @@ public class HotUserApiService {
     }
 
     public Page<HotProduct> getProducts(Pageable pageable) {
-      return hotProductRepository.findAll(pageable);
+        return hotProductRepository.findAll(pageable);
     }
 
     public ProductsResponse getProducts() {
         try {
-
             if (hotProductRepository.count() > 0) {
                 ProductsResponse response = new ProductsResponse();
-                List<Products> products = hotProductRepository.findAll().stream().map(product -> Products.builder()
-                        .productId(product.getProductId())
-                        .name(product.getName())
-                        .accountTypeId(product.getAccountTypeId())
-                        .requiredOptions(product.getRequiredOptions())
-                        .metaData(product.getMetaData())
-                        .build()).toList();
+                List<Products> products = hotProductRepository.findAll().stream()
+                        .map(product -> Products.builder()
+                                .productId(product.getProductId())
+                                .name(product.getName())
+                                .accountTypeId(product.getAccountTypeId())
+                                .requiredOptions(product.getRequiredOptions())
+                                .metaData(product.getMetaData())
+                                .build())
+                        .toList();
                 response.setProducts(products);
                 return response;
             }
+
+            // Configure ObjectMapper
+            ObjectMapper mapper = new ObjectMapper()
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    .setPropertyNamingStrategy(PropertyNamingStrategies.UPPER_CAMEL_CASE);
+
             ResponseEntity<ProductsResponse> response = restTemplate.exchange(
                     BASE_URL + "/products/0",
                     HttpMethod.GET,
@@ -228,21 +236,24 @@ public class HotUserApiService {
             );
 
             List<HotProduct> hotProducts = Objects.requireNonNull(response.getBody()).getProducts()
-                    .stream().map(product -> HotProduct.builder()
-                            .productId(product.getProductId())
-                            .name(product.getName())
-                            .accountTypeId(product.getAccountTypeId())
-                            .requiredOptions(product.getRequiredOptions())
-                            .metaData(objectMapper.convertValue(product.getMetaData(), MetaData.class))
-                            .build()).toList();
-            hotProductRepository.saveAllAndFlush(hotProducts);
+                    .stream()
+                    .map(product -> {
+                        return HotProduct.builder()
+                                .productId(product.getProductId())
+                                .name(product.getName())
+                                .accountTypeId(product.getAccountTypeId())
+                                .requiredOptions(product.getRequiredOptions())
+                                .metaData(mapper.convertValue(product.getMetaData(), MetaData.class))
+                                .build();
+                    })
+                    .toList();
 
+            hotProductRepository.saveAllAndFlush(hotProducts);
             return response.getBody();
-        } catch (RestClientException e) {
+        } catch (Exception e) {
             throw new HotUserApiException("Failed to retrieve products", e);
         }
     }
-
     public ProductsResponse getProductDetails(int productId) {
         try {
             Optional<HotProduct> hotProduct = hotProductRepository.findByProductId(productId);
